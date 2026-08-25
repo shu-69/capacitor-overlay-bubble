@@ -1,6 +1,7 @@
 package com.geekbros.plugins.overlaybubble
 
 import android.animation.ValueAnimator
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -404,10 +405,25 @@ class OverlayBubbleManager(private val context: Context) {
             val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
             if (launchIntent != null) {
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                context.startActivity(launchIntent)
+                val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                } else {
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                }
+                val pendingIntent = PendingIntent.getActivity(context, 0, launchIntent, flags)
+                pendingIntent.send()
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            try {
+                val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+                if (launchIntent != null) {
+                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                    context.startActivity(launchIntent)
+                }
+            } catch (fallbackErr) {
+                fallbackErr.printStackTrace()
+            }
         }
     }
 
