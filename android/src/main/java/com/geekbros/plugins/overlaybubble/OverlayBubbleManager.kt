@@ -374,9 +374,20 @@ class OverlayBubbleManager(private val context: Context) {
     }
 
     private fun updateDuration(durationSeconds: Int) {
-        val mins = durationSeconds / 60
+        if (durationSeconds <= 0) {
+            Handler(Looper.getMainLooper()).post {
+                durationTextView?.text = "00:00"
+            }
+            return
+        }
+        val hours = durationSeconds / 3600
+        val mins = (durationSeconds % 3600) / 60
         val secs = durationSeconds % 60
-        val formatted = String.format("%02d:%02d", mins, secs)
+        val formatted = if (hours > 0) {
+            String.format("%d:%02d:%02d", hours, mins, secs)
+        } else {
+            String.format("%02d:%02d", mins, secs)
+        }
         Handler(Looper.getMainLooper()).post {
             durationTextView?.text = formatted
         }
